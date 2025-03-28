@@ -16,13 +16,13 @@
     <script>
         // 🔹 Configurar Firebase
         const firebaseConfig = {
-            apiKey: "TU_API_KEY",
-            authDomain: "TU_AUTH_DOMAIN",
-            databaseURL: "TU_DATABASE_URL",
-            projectId: "TU_PROJECT_ID",
-            storageBucket: "TU_STORAGE_BUCKET",
-            messagingSenderId: "TU_MESSAGING_SENDER_ID",
-            appId: "TU_APP_ID"
+            apiKey: "AIzaSyCMszv7jh7aT3oO6DR-m_xno7CLKR1T25Q",
+        authDomain: "vibracionesenitagui.firebaseapp.com",
+        databaseURL: "https://vibracionesenitagui-default-rtdb.firebaseio.com",
+        projectId: "vibracionesenitagui",
+        storageBucket: "vibracionesenitagui.firebasestorage.app",
+        messagingSenderId: "875120022893",
+        appId: "1:875120022893:web:84962cabeaae3d7decf664"
         };
 
         firebase.initializeApp(firebaseConfig);
