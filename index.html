@@ -3,37 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor de Vibraciones</title>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js"></script>
+    <title>Monitoreo de Vibraciones</title>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+   
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1>Monitor de Vibraciones</h1>
-    <h2>Vibración Actual: <span id="vibracionActual">0</span> m/s²</h2>
-    <canvas id="grafico"></canvas>
+
+    <h1>Vibración en Tiempo Real</h1>
+    <h2 id="valorVibracion">Cargando...</h2>
+   
+    <canvas id="grafica"></canvas>
 
     <script>
         // 🔹 Configurar Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCMszv7jh7aT3oO6DR-m_xno7CLKR1T25Q",
-        authDomain: "vibracionesenitagui.firebaseapp.com",
-        databaseURL: "https://vibracionesenitagui-default-rtdb.firebaseio.com",
-        projectId: "vibracionesenitagui",
-        storageBucket: "vibracionesenitagui.firebasestorage.app",
-        messagingSenderId: "875120022893",
-        appId: "1:875120022893:web:84962cabeaae3d7decf664"
+            authDomain: "vibracionesenitagui.firebaseapp.com",
+            databaseURL: "https://vibracionesenitagui-default-rtdb.firebaseio.com",
+            projectId: "vibracionesenitagui",
+            storageBucket: "vibracionesenitagui.appspot.com",
+            messagingSenderId: "875120022893",
+            appId: "1:875120022893:web:84962cabeaae3d7decf664"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        // 🔹 Inicializar Firebase
+        const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const vibracionRef = db.ref("vibracion/actual");
-        const vibracionActual = document.getElementById("vibracionActual");
+        // 🔹 Referencias a los datos en Firebase
+        const vibracionRef = db.ref("vibracion");
 
-        // 🔹 Configurar gráfico
-        const ctx = document.getElementById("grafico").getContext("2d");
-        const chart = new Chart(ctx, {
+        // 🔹 Configurar Gráfica con Chart.js
+        const ctx = document.getElementById("grafica").getContext("2d");
+        const grafica = new Chart(ctx, {
             type: "line",
             data: {
                 labels: [],
@@ -46,28 +53,51 @@
                 }]
             },
             options: {
+                responsive: true,
                 scales: {
-                    x: { title: { display: true, text: "Tiempo" } },
-                    y: { title: { display: true, text: "Vibración (m/s²)" } }
+                    x: { display: true, title: { display: true, text: "Tiempo" }},
+                    y: { display: true, title: { display: true, text: "Vibración (m/s²)" }}
                 }
             }
         });
 
-        // 🔹 Escuchar cambios en Firebase
-        vibracionRef.on("value", (snapshot) => {
-            const vibracion = snapshot.val();
-            vibracionActual.textContent = vibracion.toFixed(2);
-
-            const now = new Date().toLocaleTimeString();
-            chart.data.labels.push(now);
-            chart.data.datasets[0].data.push(vibracion);
-           
-            if (chart.data.labels.length > 20) { // Limitar puntos en el gráfico
-                chart.data.labels.shift();
-                chart.data.datasets[0].data.shift();
+        // 🔹 Cargar historial de Firebase al inicio
+        vibracionRef.child("historial").once("value", (snapshot) => {
+            const datos = snapshot.val();
+            if (datos) {
+                Object.keys(datos).forEach((timestamp) => {
+                    const vibracion = datos[timestamp].vibracion;
+                    agregarDatoAGrafica(vibracion, new Date(parseInt(timestamp)).toLocaleTimeString());
+                });
             }
-            chart.update();
         });
+
+        // 🔹 Escuchar cambios en tiempo real
+        vibracionRef.child("actual").on("value", (snapshot) => {
+            const datos = snapshot.val();
+            if (datos) {
+                const valorActual = datos.vibracion;
+                document.getElementById("valorVibracion").innerText = valorActual + " m/s²";
+               
+                // Agregar a la gráfica con la hora actual
+                agregarDatoAGrafica(valorActual, new Date().toLocaleTimeString());
+            }
+        });
+
+        // 🔹 Función para agregar datos a la gráfica
+        function agregarDatoAGrafica(valor, tiempo) {
+            grafica.data.labels.push(tiempo);
+            grafica.data.datasets[0].data.push(valor);
+
+            if (grafica.data.labels.length > 20) { // Máximo 20 datos en pantalla
+                grafica.data.labels.shift();
+                grafica.data.datasets[0].data.shift();
+            }
+
+            grafica.update();
+        }
+
     </script>
+
 </body>
 </html>
